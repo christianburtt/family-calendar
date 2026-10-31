@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { Form, Head, usePage } from '@inertiajs/vue3';
 import { Link } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
+import ColorPicker from '@/components/ColorPicker.vue';
 import DeleteUser from '@/components/DeleteUser.vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
+import TimezoneSelect from '@/components/TimezoneSelect.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,8 +25,15 @@ defineOptions({
     },
 });
 
+defineProps<{
+    takenColors: string[];
+}>();
+
 const page = usePage();
 const user = computed(() => page.props.auth.user);
+
+const color = ref(user.value.color);
+const timezone = ref(user.value.timezone);
 </script>
 
 <template>
@@ -36,7 +45,7 @@ const user = computed(() => page.props.auth.user);
         <Heading
             variant="small"
             title="Profile"
-            description="Update your name and email address"
+            description="Update your name, email address, color and timezone"
         />
 
         <Form
@@ -91,6 +100,25 @@ const user = computed(() => page.props.auth.user);
                 >
                     A new verification link has been sent to your email address.
                 </div>
+            </div>
+
+            <div class="grid gap-2">
+                <Label for="color">Calendar color</Label>
+                <ColorPicker
+                    id="color"
+                    v-model="color"
+                    :taken-colors="takenColors"
+                />
+                <InputError class="mt-2" :message="errors.color" />
+            </div>
+
+            <div class="grid gap-2">
+                <Label for="timezone">Timezone</Label>
+                <TimezoneSelect id="timezone" v-model="timezone" />
+                <p class="text-xs text-muted-foreground">
+                    Everyone's events are shown to you in this timezone.
+                </p>
+                <InputError class="mt-2" :message="errors.timezone" />
             </div>
 
             <div class="flex items-center gap-4">

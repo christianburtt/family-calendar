@@ -19,7 +19,32 @@ trait ProfileValidationRules
         return [
             'name' => $this->nameRules(),
             'email' => $this->emailRules($userId),
+            'color' => $this->colorRules(),
+            'timezone' => $this->timezoneRules(),
         ];
+    }
+
+    /**
+     * Get the validation rules used to validate a user's calendar color.
+     *
+     * @return array<int, Unique|ValidationRule|array<mixed>|string>
+     */
+    protected function colorRules(): array
+    {
+        return ['required', 'string', 'hex_color', 'size:7'];
+    }
+
+    /**
+     * Get the validation rules used to validate user timezones.
+     *
+     * Backward-compatible identifiers are allowed because some browsers
+     * still report legacy names, such as "Asia/Calcutta".
+     *
+     * @return array<int, Unique|ValidationRule|array<mixed>|string>
+     */
+    protected function timezoneRules(): array
+    {
+        return ['required', 'string', 'timezone:all_with_bc'];
     }
 
     /**
