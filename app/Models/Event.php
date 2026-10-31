@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use App\Support\RecurrenceRule;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Scope;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,10 +19,11 @@ use Illuminate\Support\Carbon;
  * @property string|null $notes
  * @property Carbon $starts_at
  * @property Carbon $ends_at
+ * @property string|null $recurrence_rule
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['title', 'notes', 'starts_at', 'ends_at'])]
+#[Fillable(['title', 'notes', 'starts_at', 'ends_at', 'recurrence_rule'])]
 class Event extends Model
 {
     /** @use HasFactory<EventFactory> */
@@ -39,15 +40,43 @@ class Event extends Model
     }
 
     /**
-     * Scope a query to events that overlap the given period (end exclusive).
-     *
-     * @param  Builder<self>  $query
+     * The parsed recurrence rule, if this event repeats.
      */
-    #[Scope]
-    protected function overlapping(Builder $query, CarbonInterface $start, CarbonInterface $end): void
+    public function recurrence(): ?RecurrenceRule
     {
-        $query->where('starts_at', '<', $end->copy()->utc())
-            ->where('ends_at', '>', $start->copy()->utc());
+        return RecurrenceRule::fromRRule($this->recurrence_rule);
+    }
+
+    /**
+     * Expand the event into occurrences that overlap the given range.
+     *
+     * Recurring events are expanded in the owner's timezone, while one-off
+     * events are returned as they are.
+     *
+     * @return list<array{starts_at: CarbonImmutable, ends_at: CarbonImmutable}>
+     */
+    public function occurrencesBetween(CarbonInterface $rangeStart, CarbonInterface $rangeEnd): array
+    {
+        $startsAt = CarbonImmutable::instance($this->starts_at);
+        $endsAt = CarbonImmutable::instance($this->ends_at);
+        $rangeStart = CarbonImmutable::instance($rangeStart);
+        $rangeEnd = CarbonImmutable::instance($rangeEnd);
+
+        $rule = $this->recurrence();
+
+        if ($rule === null) {
+            return $startsAt->lessThan($rangeEnd) && $endsAt->greaterThan($rangeStart)
+                ? [['starts_at' => $startsAt, 'ends_at' => $endsAt]]
+                : [];
+        }
+
+        return $rule->occurrencesBetween(
+            $startsAt,
+            $endsAt,
+            $rangeStart,
+            $rangeEnd,
+            $this->user->timezone,
+        );
     }
 
     /**

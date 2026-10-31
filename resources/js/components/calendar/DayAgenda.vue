@@ -50,7 +50,7 @@ const daySpans = computed(() => spansOnDay(props.spans, props.day));
         </header>
 
         <ul v-if="daySpans.length > 0" class="divide-y">
-            <li v-for="span in daySpans" :key="span.event.id">
+            <li v-for="span in daySpans" :key="span.event.occurrence_id">
                 <button
                     type="button"
                     class="flex w-full cursor-pointer items-stretch gap-3 px-4 py-2.5 text-left transition-colors hover:bg-muted/50"

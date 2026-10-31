@@ -183,7 +183,7 @@ watch(isDesktop, async (desktop) => {
                 >
                     <button
                         v-for="span in allDaySpans.get(toDateKey(day))"
-                        :key="span.event.id"
+                        :key="span.event.occurrence_id"
                         type="button"
                         class="cursor-pointer truncate rounded-sm border-l-[3px] px-1.5 py-0.5 text-left text-xs text-foreground transition hover:brightness-95 dark:hover:brightness-125"
                         :style="
@@ -231,7 +231,7 @@ watch(isDesktop, async (desktop) => {
                     >
                         <button
                             v-for="segment in layouts.get(toDateKey(day))"
-                            :key="segment.span.event.id"
+                            :key="segment.span.event.occurrence_id"
                             type="button"
                             class="absolute flex cursor-pointer flex-col overflow-hidden rounded-md border-l-[3px] px-1.5 py-1 text-left text-xs leading-tight text-foreground transition hover:z-10 hover:brightness-95 dark:hover:brightness-125"
                             :style="segmentStyle(segment)"

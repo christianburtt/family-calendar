@@ -33,11 +33,16 @@ test('the month view shows every family member\'s events in the viewer\'s timezo
         ->has('events', 1)
         ->where('events.0', [
             'id' => $event->id,
+            'occurrence_id' => $event->id.'@20261103T210000Z',
             'user_id' => $sam->id,
             'title' => 'Piano lesson',
             'notes' => $event->notes,
             'starts_at' => '2026-11-03T16:00',
             'ends_at' => '2026-11-03T17:30',
+            'series_starts_at' => '2026-11-03T16:00',
+            'series_ends_at' => '2026-11-03T17:30',
+            'recurrence_rule' => null,
+            'recurrence' => null,
         ])
         ->where('members', [
             ['id' => $viewer->id, 'name' => 'Alex', 'color' => '#2563eb'],
