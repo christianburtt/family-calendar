@@ -7,6 +7,7 @@ use App\Models\Event;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -31,10 +32,26 @@ class CalendarController extends Controller
             $rangeEnd = $date->endOfMonth()->startOfWeek(CarbonInterface::SUNDAY)->addWeek();
         }
 
+        $rangeStartUtc = $rangeStart->utc();
+        $rangeEndUtc = $rangeEnd->utc();
+
         $events = Event::query()
-            ->overlapping($rangeStart, $rangeEnd)
-            ->orderBy('starts_at')
+            ->with('user')
+            ->where('starts_at', '<', $rangeEndUtc)
+            ->where(function (Builder $query) use ($rangeStartUtc): void {
+                // Recurring series can reach the range from any start date.
+                $query->whereNotNull('recurrence_rule')
+                    ->orWhere('ends_at', '>', $rangeStartUtc);
+            })
             ->get();
+
+        $occurrences = $events
+            ->flatMap(fn (Event $event): array => array_map(
+                fn (array $occurrence): array => [$event, $occurrence['starts_at'], $occurrence['ends_at']],
+                $event->occurrencesBetween($rangeStartUtc, $rangeEndUtc),
+            ))
+            ->sortBy(fn (array $occurrence): int => $occurrence[1]->getTimestamp())
+            ->values();
 
         return Inertia::render('Calendar', [
             'view' => $view,
@@ -42,7 +59,9 @@ class CalendarController extends Controller
             'today' => $today->toDateString(),
             'rangeStart' => $rangeStart->toDateString(),
             'rangeEnd' => $rangeEnd->toDateString(),
-            'events' => EventResource::collection($events)->resolve($request),
+            'events' => $occurrences
+                ->map(fn (array $occurrence): array => (new EventResource(...$occurrence))->resolve($request))
+                ->all(),
             'members' => User::query()->orderBy('name')->get(['id', 'name', 'color']),
         ]);
     }

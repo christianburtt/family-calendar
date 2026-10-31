@@ -142,7 +142,7 @@ function onDayClick(day: Date): void {
                             v-for="span in spansByDay
                                 .get(toDateKey(day))
                                 ?.slice(0, MAX_VISIBLE_EVENTS)"
-                            :key="span.event.id"
+                            :key="span.event.occurrence_id"
                             type="button"
                             class="pointer-events-auto cursor-pointer truncate rounded-sm border-l-[3px] px-1.5 py-0.5 text-left text-xs text-foreground transition hover:brightness-95 dark:hover:brightness-125"
                             :style="
@@ -189,7 +189,7 @@ function onDayClick(day: Date): void {
                             v-for="span in spansByDay
                                 .get(toDateKey(day))
                                 ?.slice(0, 6)"
-                            :key="span.event.id"
+                            :key="span.event.occurrence_id"
                             class="size-1.5 rounded-full"
                             :style="{
                                 backgroundColor: membersById.get(

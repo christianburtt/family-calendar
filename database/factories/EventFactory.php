@@ -34,4 +34,12 @@ class EventFactory extends Factory
             'ends_at' => $startsAt->addMinutes(fake()->randomElement([30, 60, 90, 120])),
         ];
     }
+
+    /**
+     * Make the event repeat using the given RRULE.
+     */
+    public function recurring(string $rule = 'FREQ=WEEKLY'): static
+    {
+        return $this->state(fn (): array => ['recurrence_rule' => $rule]);
+    }
 }
