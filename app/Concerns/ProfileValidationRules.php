@@ -3,6 +3,7 @@
 namespace App\Concerns;
 
 use App\Models\User;
+use App\Support\TimezoneAliases;
 use Closure;
 use DateTimeZone;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -40,14 +41,14 @@ trait ProfileValidationRules
     /**
      * Get the validation rules used to validate user timezones.
      *
-     * Backward-compatible identifiers are allowed because some browsers still
-     * report legacy names, such as "Asia/Calcutta".
+     * Backward-compatible identifiers are accepted because some browsers still
+     * report legacy names, such as "Asia/Calcutta". They are normalised to the
+     * modern zone on save, so a stored value is always one the running PHP
+     * build can construct.
      *
      * Laravel's built-in `timezone:all_with_bc` rule only knows the identifiers
-     * compiled into the running PHP build, so a build without the backward
-     * links rejects names the browser happily reports. This accepts any named
-     * zone PHP can actually resolve, while still refusing offsets ("+02:00"),
-     * lowercase shortcuts ("est") and nonsense.
+     * compiled into the binary, so builds without the tzdb backward links
+     * reject these names outright.
      *
      * @return array<int, Closure|Unique|ValidationRule|array<mixed>|string>
      */
@@ -57,7 +58,7 @@ trait ProfileValidationRules
             'required',
             'string',
             function (string $attribute, mixed $value, Closure $fail): void {
-                if (! is_string($value) || ! $this->isValidTimezone($value)) {
+                if (! is_string($value) || $this->canonicalTimezone($value) === null) {
                     $fail('validation.timezone')->translate();
                 }
             },
@@ -65,27 +66,38 @@ trait ProfileValidationRules
     }
 
     /**
-     * Whether the value is a timezone identifier PHP can resolve.
+     * Resolve an accepted timezone to a zone the running PHP build can use.
+     *
+     * Offsets ("+02:00"), abbreviations ("est") and junk resolve to null, so
+     * they stay invalid. Legacy names resolve to their modern equivalent, so
+     * the stored value is portable between builds.
      */
-    protected function isValidTimezone(string $value): bool
+    protected function canonicalTimezone(string $value): ?string
     {
         if (in_array($value, timezone_identifiers_list(DateTimeZone::ALL), true)) {
-            return true;
+            return $value;
         }
 
-        // Only named identifiers, so offsets and lowercase aliases stay invalid.
-        // A bare "Z" is a UTC shortcut, not a zone name, so require a region.
-        if (preg_match('/^[A-Z][A-Za-z0-9_+\-]*(\/[A-Za-z0-9_+\-]+)+$/', $value) !== 1) {
-            return false;
+        $canonical = TimezoneAliases::CANONICAL[$value] ?? null;
+
+        // Zones such as "Etc/UTC" are usable but not listed in ALL. Accept them
+        // when they are plainly a named region, never an offset or abbreviation.
+        if ($canonical === null) {
+            if (preg_match('/^[A-Z][A-Za-z0-9_+\-]*(\/[A-Za-z0-9_+\-]+)+$/', $value) !== 1) {
+                return null;
+            }
+
+            $canonical = $value;
         }
 
+        // Storing a name the runtime cannot construct would break rendering.
         try {
-            new DateTimeZone($value);
+            new DateTimeZone($canonical);
         } catch (Throwable) {
-            return false;
+            return null;
         }
 
-        return true;
+        return $canonical;
     }
 
     /**

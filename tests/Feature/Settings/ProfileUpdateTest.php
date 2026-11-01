@@ -51,10 +51,33 @@ test('legacy timezone names reported by some browsers are accepted', function ()
 
     $response->assertSessionHasNoErrors();
 
-    expect($user->refresh()->timezone)->toBe('Asia/Calcutta');
+    // Stored as the modern zone, so any PHP build can construct it.
+    expect($user->refresh()->timezone)->toBe('Asia/Kolkata');
 });
 
-test('timezone validation does not depend on the PHP build\'s backward links', function (string $timezone) {
+test('legacy timezone names are normalised to the modern zone', function (string $legacy, string $canonical) {
+    $user = User::factory()->create();
+
+    $this
+        ->actingAs($user)
+        ->patch(route('profile.update'), [
+            'name' => $user->name,
+            'email' => $user->email,
+            'color' => $user->color,
+            'timezone' => $legacy,
+        ])
+        ->assertSessionHasNoErrors();
+
+    expect($user->refresh()->timezone)->toBe($canonical);
+})->with([
+    ['Asia/Calcutta', 'Asia/Kolkata'],
+    ['Asia/Katmandu', 'Asia/Kathmandu'],
+    ['US/Eastern', 'America/New_York'],
+    ['Europe/Kiev', 'Europe/Kyiv'],
+    ['Asia/Saigon', 'Asia/Ho_Chi_Minh'],
+]);
+
+test('canonical timezone names are stored unchanged', function (string $timezone) {
     $user = User::factory()->create();
 
     $this
@@ -69,9 +92,6 @@ test('timezone validation does not depend on the PHP build\'s backward links', f
 
     expect($user->refresh()->timezone)->toBe($timezone);
 })->with([
-    'Asia/Calcutta',
-    'Asia/Katmandu',
-    'US/Eastern',
     'America/New_York',
     'Europe/Bucharest',
     'UTC',

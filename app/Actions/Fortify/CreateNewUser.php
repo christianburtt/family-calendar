@@ -28,7 +28,7 @@ class CreateNewUser implements CreatesNewUsers
             'name' => $input['name'],
             'email' => $input['email'],
             'color' => $input['color'],
-            'timezone' => $input['timezone'],
+            'timezone' => $this->canonicalTimezone($input['timezone']) ?? $input['timezone'],
             'password' => $input['password'],
         ]);
     }
