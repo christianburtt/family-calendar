@@ -17,13 +17,13 @@ Built on the Laravel Vue starter kit with [Laravel 13](https://laravel.com), [In
 
 ## Tech stack
 
-| Layer | Tools |
-| --- | --- |
-| Backend | PHP 8.4, Laravel 13, Laravel Fortify, Laravel Wayfinder |
+| Layer    | Tools                                                                |
+| -------- | -------------------------------------------------------------------- |
+| Backend  | PHP 8.4, Laravel 13, Laravel Fortify, Laravel Wayfinder              |
 | Frontend | Inertia v3, Vue 3, TypeScript, Tailwind CSS 4, Reka UI, Lucide icons |
-| Build | Vite (via `vite-plus`), Wayfinder Vite plugin |
-| Data | MySQL (SQLite supported), Eloquent |
-| Quality | Pest, Pint, Larastan/PHPStan, `vue-tsc` |
+| Build    | Vite (via `vite-plus`), Wayfinder Vite plugin                        |
+| Data     | MySQL (SQLite supported), Eloquent                                   |
+| Quality  | Pest, Pint, Larastan/PHPStan, `vue-tsc`                              |
 
 ## Requirements
 
@@ -76,12 +76,12 @@ php artisan db:seed
 
 All seeded accounts use the password `password`:
 
-| Name | Email |
-| --- | --- |
-| Test User | `test@example.com` |
-| Sam | `sam@example.com` |
-| Jordan | `jordan@example.com` |
-| Riley | `riley@example.com` |
+| Name      | Email                |
+| --------- | -------------------- |
+| Test User | `test@example.com`   |
+| Sam       | `sam@example.com`    |
+| Jordan    | `jordan@example.com` |
+| Riley     | `riley@example.com`  |
 
 ### Run the app
 
@@ -95,16 +95,16 @@ Prefer separate terminals? Run `php artisan serve` and `npm run dev` yourself.
 
 ## Development commands
 
-| Command | What it does |
-| --- | --- |
-| `composer run dev` | Run server, Vite, queue and logs together |
-| `npm run build` | Build production assets |
-| `npm run types:check` | Type-check the frontend with `vue-tsc` |
-| `npm run check` / `npm run check:fix` | Lint/format frontend code |
-| `vendor/bin/pint --dirty` | Format changed PHP files |
-| `composer types:check` | Run PHPStan (Larastan) |
-| `php artisan test --compact` | Run the test suite |
-| `composer ci:check` | Everything CI runs: frontend checks, type checks and tests |
+| Command                               | What it does                                               |
+| ------------------------------------- | ---------------------------------------------------------- |
+| `composer run dev`                    | Run server, Vite, queue and logs together                  |
+| `npm run build`                       | Build production assets                                    |
+| `npm run types:check`                 | Type-check the frontend with `vue-tsc`                     |
+| `npm run check` / `npm run check:fix` | Lint/format frontend code                                  |
+| `vendor/bin/pint --dirty`             | Format changed PHP files                                   |
+| `composer types:check`                | Run PHPStan (Larastan)                                     |
+| `php artisan test --compact`          | Run the test suite                                         |
+| `composer ci:check`                   | Everything CI runs: frontend checks, type checks and tests |
 
 ## Testing
 

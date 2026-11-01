@@ -279,7 +279,10 @@ async function copy(value: string, key: string): Promise<void> {
         >
             <h2 class="text-sm font-medium">Calendar name</h2>
 
-            <form class="flex flex-wrap items-end gap-2" @submit.prevent="rename">
+            <form
+                class="flex flex-wrap items-end gap-2"
+                @submit.prevent="rename"
+            >
                 <div class="grid min-w-0 flex-1 gap-2">
                     <Label for="calendar-name" class="sr-only">
                         Calendar name

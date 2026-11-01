@@ -102,7 +102,7 @@ class CalendarMembersController extends Controller
     /**
      * List the people on a calendar with the given membership status.
      *
-     * @return list<array{id: int, user_id: int, name: string, color: string, role: string}>
+     * @return array<int, array{id: int, user_id: int, name: string, color: string, role: string}>
      */
     private function memberships(Calendar $calendar, string $status): array
     {

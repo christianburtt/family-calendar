@@ -13,10 +13,7 @@ export function codeFromInput(input: string): string {
         return trimmed;
     }
 
-    const segments = trimmed
-        .split(/[?#]/)[0]
-        .split('/')
-        .filter(Boolean);
+    const segments = trimmed.split(/[?#]/)[0].split('/').filter(Boolean);
 
     return segments.at(-1) ?? trimmed;
 }
