@@ -63,4 +63,3 @@ export type CalendarMemberRecord = {
     color: string;
     role: 'owner' | 'member';
 };
-

@@ -6,7 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { calendar } from '@/routes';
-import { create as createCalendar, store as storeCalendar } from '@/routes/calendars';
+import {
+    create as createCalendar,
+    store as storeCalendar,
+} from '@/routes/calendars';
 
 defineOptions({
     layout: {

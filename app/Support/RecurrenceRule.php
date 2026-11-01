@@ -4,6 +4,7 @@ namespace App\Support;
 
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Carbon\Exceptions\InvalidFormatException;
 use Generator;
 use InvalidArgumentException;
 
@@ -260,12 +261,16 @@ final class RecurrenceRule
         CarbonImmutable $searchFrom,
         bool $skipAhead,
     ): Generator {
-        return match ($this->frequency) {
+        /** @var Generator<int, CarbonImmutable> $candidates */
+        $candidates = match ($this->frequency) {
             'DAILY' => $this->dailyCandidates($localStart, $searchFrom, $skipAhead),
             'WEEKLY' => $this->weeklyCandidates($localStart, $searchFrom, $skipAhead),
             'MONTHLY' => $this->monthlyCandidates($localStart, $searchFrom, $skipAhead),
             'YEARLY' => $this->yearlyCandidates($localStart, $searchFrom, $skipAhead),
+            default => throw new InvalidArgumentException("Unsupported recurrence frequency [{$this->frequency}]."),
         };
+
+        return $candidates;
     }
 
     /**
@@ -421,9 +426,14 @@ final class RecurrenceRule
         $value = strtoupper($value);
 
         foreach (['Ymd\THis\Z', 'Ymd\THis', 'Ymd'] as $format) {
-            $date = CarbonImmutable::createFromFormat('!'.$format, $value, 'UTC');
+            try {
+                $date = CarbonImmutable::createFromFormat('!'.$format, $value, 'UTC');
+            } catch (InvalidFormatException) {
+                // Carbon throws instead of returning false when the format misses.
+                continue;
+            }
 
-            if ($date !== false && $date->format($format) === $value) {
+            if ($date->format($format) === $value) {
                 return $date;
             }
         }

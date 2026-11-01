@@ -69,11 +69,7 @@ function submit(): void {
                 </div>
 
                 <DialogFooter>
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        @click="open = false"
-                    >
+                    <Button type="button" variant="ghost" @click="open = false">
                         Cancel
                     </Button>
                     <Button type="submit" :disabled="code.trim() === ''">

@@ -17,7 +17,7 @@ export default defineConfig({
                 }),
                 bunny('Nunito', {
                     weights: [400, 500, 600],
-                })
+                }),
             ],
         }),
         inertia(),

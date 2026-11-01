@@ -31,8 +31,17 @@ jobs:
         with:
           node-version: '22'
 
+      # `composer setup` runs a migrate, but .env.example points at MySQL and the
+      # runner has no database server. Point it at a disposable SQLite file
+      # instead. Scoped to this step only: phpunit.xml uses SQLite in memory, and
+      # its <env> entries cannot override variables that are already exported.
       - name: Setup Application
-        run: composer setup
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+        run: |
+          touch database/database.sqlite
+          composer setup
 
       - name: Run CI Checks
         run: composer ci:check

@@ -100,7 +100,11 @@ function join(): void {
             </Button>
         </div>
 
-        <div v-else class="space-y-4 rounded-lg border p-6" data-test="join-confirm">
+        <div
+            v-else
+            class="space-y-4 rounded-lg border p-6"
+            data-test="join-confirm"
+        >
             <div class="space-y-1">
                 <h1 class="text-lg font-semibold tracking-tight">
                     Join {{ calendar.name }}?

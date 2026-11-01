@@ -68,7 +68,7 @@ class CalendarController extends Controller
     /**
      * Expand the calendar's events into the occurrences that overlap the range.
      *
-     * @return list<array<string, mixed>>
+     * @return array<int, array<string, mixed>>
      */
     private function eventsFor(
         Request $request,
@@ -105,7 +105,7 @@ class CalendarController extends Controller
      * Reduce calendars to the shape the frontend switcher needs.
      *
      * @param  Collection<int, Calendar>  $calendars
-     * @return list<array{id: int, name: string}>
+     * @return array<int, array{id: int, name: string}>
      */
     private function calendarSummaries(Collection $calendars): array
     {
