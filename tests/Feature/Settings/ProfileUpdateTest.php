@@ -54,6 +54,53 @@ test('legacy timezone names reported by some browsers are accepted', function ()
     expect($user->refresh()->timezone)->toBe('Asia/Calcutta');
 });
 
+test('timezone validation does not depend on the PHP build\'s backward links', function (string $timezone) {
+    $user = User::factory()->create();
+
+    $this
+        ->actingAs($user)
+        ->patch(route('profile.update'), [
+            'name' => $user->name,
+            'email' => $user->email,
+            'color' => $user->color,
+            'timezone' => $timezone,
+        ])
+        ->assertSessionHasNoErrors();
+
+    expect($user->refresh()->timezone)->toBe($timezone);
+})->with([
+    'Asia/Calcutta',
+    'Asia/Katmandu',
+    'US/Eastern',
+    'America/New_York',
+    'Europe/Bucharest',
+    'UTC',
+]);
+
+test('offsets and bare abbreviations are still rejected as timezones', function (string $timezone) {
+    $user = User::factory()->create(['timezone' => 'UTC']);
+
+    $this
+        ->actingAs($user)
+        ->from(route('profile.edit'))
+        ->patch(route('profile.update'), [
+            'name' => $user->name,
+            'email' => $user->email,
+            'color' => $user->color,
+            'timezone' => $timezone,
+        ])
+        ->assertSessionHasErrors(['timezone' => 'The timezone field must be a valid timezone.']);
+
+    expect($user->refresh()->timezone)->toBe('UTC');
+})->with([
+    '+02:00',
+    '-05:00',
+    'Z',
+    'est',
+    'utc',
+    'Not/AZone',
+]);
+
 test('invalid profile colors and timezones are rejected', function (array $input, string $field, string $message) {
     $user = User::factory()->create(['color' => '#2563eb', 'timezone' => 'UTC']);
 
