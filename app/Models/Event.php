@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $user_id
+ * @property int|null $calendar_id
  * @property string $title
  * @property string|null $notes
  * @property Carbon $starts_at
@@ -23,11 +24,21 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['title', 'notes', 'starts_at', 'ends_at', 'recurrence_rule'])]
+#[Fillable(['title', 'notes', 'starts_at', 'ends_at', 'recurrence_rule', 'calendar_id'])]
 class Event extends Model
 {
     /** @use HasFactory<EventFactory> */
     use HasFactory;
+
+    /**
+     * Get the calendar the event appears on.
+     *
+     * @return BelongsTo<Calendar, $this>
+     */
+    public function calendar(): BelongsTo
+    {
+        return $this->belongsTo(Calendar::class);
+    }
 
     /**
      * Get the family member whose calendar the event is on.

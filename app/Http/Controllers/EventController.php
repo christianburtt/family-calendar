@@ -12,11 +12,18 @@ use Inertia\Inertia;
 class EventController extends Controller
 {
     /**
-     * Add an event to the current user's calendar.
+     * Add an event to the calendar the current user is looking at.
      */
     public function store(StoreEventRequest $request): RedirectResponse
     {
-        $request->user()->events()->create($request->eventAttributes());
+        $calendar = $request->user()->currentCalendar();
+
+        abort_if($calendar === null, 403, __('Join a calendar before adding events.'));
+
+        $request->user()->events()->create([
+            ...$request->eventAttributes(),
+            'calendar_id' => $calendar->id,
+        ]);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Event added.')]);
 

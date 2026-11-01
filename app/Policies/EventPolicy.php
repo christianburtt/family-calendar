@@ -10,11 +10,12 @@ class EventPolicy
     /**
      * Determine whether the user can update the event.
      *
-     * Everyone sees the shared calendar, but only the owner may change their events.
+     * Everyone on a calendar sees its events, but only the person who added an
+     * event may change it, and only while they are still on that calendar.
      */
     public function update(User $user, Event $event): bool
     {
-        return $event->user()->is($user);
+        return $this->ownsOnCalendar($user, $event);
     }
 
     /**
@@ -22,6 +23,16 @@ class EventPolicy
      */
     public function delete(User $user, Event $event): bool
     {
-        return $event->user()->is($user);
+        return $this->ownsOnCalendar($user, $event);
+    }
+
+    /**
+     * Whether the user added the event and can still see its calendar.
+     */
+    private function ownsOnCalendar(User $user, Event $event): bool
+    {
+        return $event->user()->is($user)
+            && $event->calendar !== null
+            && $event->calendar->hasActiveMember($user);
     }
 }

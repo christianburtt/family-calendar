@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\Calendar;
+use App\Models\CalendarUser;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -44,7 +47,26 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/**
+ * Create a calendar owned by the given person, with everyone else approved onto it.
+ */
+function calendarFor(User $owner, User ...$members): Calendar
 {
-    // ..
+    $calendar = Calendar::factory()->ownedBy($owner)->create();
+
+    $calendar->members()->attach($owner, [
+        'role' => CalendarUser::ROLE_OWNER,
+        'status' => CalendarUser::STATUS_ACTIVE,
+    ]);
+
+    foreach ($members as $member) {
+        $calendar->members()->attach($member, [
+            'role' => CalendarUser::ROLE_MEMBER,
+            'status' => CalendarUser::STATUS_ACTIVE,
+        ]);
+    }
+
+    $owner->switchTo($calendar);
+
+    return $calendar;
 }

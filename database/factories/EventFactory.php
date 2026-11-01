@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Calendar;
 use App\Models\Event;
 use App\Models\User;
 use Carbon\CarbonImmutable;
@@ -41,5 +42,13 @@ class EventFactory extends Factory
     public function recurring(string $rule = 'FREQ=WEEKLY'): static
     {
         return $this->state(fn (): array => ['recurrence_rule' => $rule]);
+    }
+
+    /**
+     * Put the event on the given calendar.
+     */
+    public function onCalendar(Calendar $calendar): static
+    {
+        return $this->state(fn (): array => ['calendar_id' => $calendar->id]);
     }
 }

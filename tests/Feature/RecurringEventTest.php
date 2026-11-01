@@ -7,6 +7,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 describe('storing a recurrence', function () {
     test('a weekly event is saved as an RRULE on the series', function () {
         $user = User::factory()->create(['timezone' => 'America/New_York']);
+        calendarFor($user);
 
         $response = $this
             ->actingAs($user)
@@ -28,6 +29,7 @@ describe('storing a recurrence', function () {
 
     test('an event that ends on a date stores a UTC until', function () {
         $user = User::factory()->create(['timezone' => 'America/New_York']);
+        calendarFor($user);
 
         $this
             ->actingAs($user)
@@ -48,6 +50,7 @@ describe('storing a recurrence', function () {
 
     test('an event that ends after a number of occurrences stores a count', function () {
         $user = User::factory()->create();
+        calendarFor($user);
 
         $this
             ->actingAs($user)
@@ -68,6 +71,7 @@ describe('storing a recurrence', function () {
 
     test('weekly recurrence requires at least one day', function () {
         $user = User::factory()->create();
+        calendarFor($user);
 
         $this
             ->actingAs($user)
@@ -90,6 +94,7 @@ describe('storing a recurrence', function () {
 
     test('a repeat end date or count is required when chosen', function () {
         $user = User::factory()->create();
+        calendarFor($user);
 
         $this
             ->actingAs($user)
@@ -126,6 +131,7 @@ describe('storing a recurrence', function () {
 
     test('an unknown weekday is rejected', function () {
         $user = User::factory()->create();
+        calendarFor($user);
 
         $this
             ->actingAs($user)
@@ -146,8 +152,9 @@ describe('storing a recurrence', function () {
 describe('showing a recurrence', function () {
     test('the calendar expands a weekly series into one event per occurrence', function () {
         $viewer = User::factory()->create(['timezone' => 'America/New_York']);
+        $calendar = calendarFor($viewer);
 
-        $event = Event::factory()->for($viewer)->recurring('FREQ=WEEKLY;BYDAY=TU,TH')->create([
+        $event = Event::factory()->for($viewer)->onCalendar($calendar)->recurring('FREQ=WEEKLY;BYDAY=TU,TH')->create([
             'title' => 'Soccer practice',
             'starts_at' => '2026-11-03 21:00:00',
             'ends_at' => '2026-11-03 22:00:00',
@@ -172,8 +179,9 @@ describe('showing a recurrence', function () {
 
     test('the series start is sent alongside each occurrence for editing', function () {
         $viewer = User::factory()->create(['timezone' => 'America/New_York']);
+        $calendar = calendarFor($viewer);
 
-        Event::factory()->for($viewer)->recurring('FREQ=WEEKLY;BYDAY=TU')->create([
+        Event::factory()->for($viewer)->onCalendar($calendar)->recurring('FREQ=WEEKLY;BYDAY=TU')->create([
             'starts_at' => '2026-11-03 21:00:00',
             'ends_at' => '2026-11-03 22:00:00',
         ]);
@@ -192,8 +200,9 @@ describe('showing a recurrence', function () {
 
     test('a one-off event is still returned once', function () {
         $viewer = User::factory()->create();
+        $calendar = calendarFor($viewer);
 
-        Event::factory()->for($viewer)->create([
+        Event::factory()->for($viewer)->onCalendar($calendar)->create([
             'starts_at' => '2026-11-03 16:00:00',
             'ends_at' => '2026-11-03 17:00:00',
         ]);
@@ -214,7 +223,8 @@ describe('showing a recurrence', function () {
 describe('changing a recurrence', function () {
     test('updating the series replaces the rule', function () {
         $user = User::factory()->create();
-        $event = Event::factory()->for($user)->recurring('FREQ=WEEKLY;BYDAY=TU')->create();
+        $calendar = calendarFor($user);
+        $event = Event::factory()->for($user)->onCalendar($calendar)->recurring('FREQ=WEEKLY;BYDAY=TU')->create();
 
         $this
             ->actingAs($user)
@@ -234,7 +244,8 @@ describe('changing a recurrence', function () {
 
     test('turning recurrence off clears the rule', function () {
         $user = User::factory()->create();
-        $event = Event::factory()->for($user)->recurring('FREQ=WEEKLY;BYDAY=TU')->create();
+        $calendar = calendarFor($user);
+        $event = Event::factory()->for($user)->onCalendar($calendar)->recurring('FREQ=WEEKLY;BYDAY=TU')->create();
 
         $this
             ->actingAs($user)

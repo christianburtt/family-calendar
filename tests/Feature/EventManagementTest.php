@@ -15,8 +15,9 @@ describe('store', function () {
         $this->assertDatabaseCount(Event::class, 0);
     });
 
-    test('an event is added to the user\'s calendar, converted from their timezone to UTC', function () {
+    test('an event is added to the calendar the user is looking at, converted to UTC', function () {
         $user = User::factory()->create(['timezone' => 'America/New_York']);
+        $calendar = calendarFor($user);
 
         $response = $this
             ->actingAs($user)
@@ -34,6 +35,7 @@ describe('store', function () {
 
         $this->assertDatabaseHas(Event::class, [
             'user_id' => $user->id,
+            'calendar_id' => $calendar->id,
             'title' => 'Soccer practice',
             'notes' => 'Bring shin guards',
             'starts_at' => '2026-11-03 21:00:00',
@@ -41,8 +43,25 @@ describe('store', function () {
         ]);
     });
 
+    test('a user with no calendar cannot add events', function () {
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->from(route('calendar'))
+            ->post(route('events.store'), [
+                'title' => 'Soccer practice',
+                'starts_at' => '2026-11-03T16:00',
+                'ends_at' => '2026-11-03T17:00',
+            ]);
+
+        $response->assertForbidden();
+        $this->assertDatabaseCount(Event::class, 0);
+    });
+
     test('a title, start and end are required', function () {
         $user = User::factory()->create();
+        calendarFor($user);
 
         $response = $this
             ->actingAs($user)
@@ -59,6 +78,7 @@ describe('store', function () {
 
     test('an event that does not end after it starts is rejected', function () {
         $user = User::factory()->create();
+        calendarFor($user);
 
         $response = $this
             ->actingAs($user)
@@ -77,7 +97,8 @@ describe('store', function () {
 describe('update', function () {
     test('a user can update their own event', function () {
         $user = User::factory()->create(['timezone' => 'Europe/London']);
-        $event = Event::factory()->for($user)->create();
+        $calendar = calendarFor($user);
+        $event = Event::factory()->for($user)->onCalendar($calendar)->create();
 
         $response = $this
             ->actingAs($user)
@@ -103,10 +124,33 @@ describe('update', function () {
 
     test('a user cannot update another family member\'s event', function () {
         $user = User::factory()->create();
-        $event = Event::factory()->create(['title' => 'Piano lesson']);
+        $partner = User::factory()->create();
+        $calendar = calendarFor($user, $partner);
+        $event = Event::factory()->for($partner)->onCalendar($calendar)->create(['title' => 'Piano lesson']);
 
         $response = $this
             ->actingAs($user)
+            ->patch(route('events.update', $event), [
+                'title' => 'Hijacked',
+                'starts_at' => '2026-11-03T16:00',
+                'ends_at' => '2026-11-03T17:00',
+            ]);
+
+        $response->assertForbidden();
+
+        expect($event->refresh()->title)->toBe('Piano lesson');
+    });
+
+    test('a user removed from the calendar can no longer update their old events', function () {
+        $owner = User::factory()->create();
+        $former = User::factory()->create();
+        $calendar = calendarFor($owner, $former);
+        $event = Event::factory()->for($former)->onCalendar($calendar)->create(['title' => 'Piano lesson']);
+
+        $calendar->members()->detach($former);
+
+        $response = $this
+            ->actingAs($former)
             ->patch(route('events.update', $event), [
                 'title' => 'Hijacked',
                 'starts_at' => '2026-11-03T16:00',
@@ -122,7 +166,8 @@ describe('update', function () {
 describe('destroy', function () {
     test('a user can delete their own event', function () {
         $user = User::factory()->create();
-        $event = Event::factory()->for($user)->create();
+        $calendar = calendarFor($user);
+        $event = Event::factory()->for($user)->onCalendar($calendar)->create();
 
         $response = $this
             ->actingAs($user)
@@ -136,7 +181,9 @@ describe('destroy', function () {
 
     test('a user cannot delete another family member\'s event', function () {
         $user = User::factory()->create();
-        $event = Event::factory()->create();
+        $partner = User::factory()->create();
+        $calendar = calendarFor($user, $partner);
+        $event = Event::factory()->for($partner)->onCalendar($calendar)->create();
 
         $response = $this
             ->actingAs($user)

@@ -41,3 +41,26 @@ export type FamilyMember = {
     name: string;
     color: string;
 };
+
+/** A calendar the viewer can switch to. */
+export type CalendarSummary = {
+    id: number;
+    name: string;
+};
+
+/** The calendar currently on screen. */
+export type CalendarContext = {
+    id: number;
+    name: string;
+    can_manage: boolean;
+};
+
+/** A membership row on the members screen. */
+export type CalendarMemberRecord = {
+    id: number;
+    user_id: number;
+    name: string;
+    color: string;
+    role: 'owner' | 'member';
+};
+
