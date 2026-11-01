@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Support\Facades\Notification;
 use Laravel\Fortify\Features;
 
 beforeEach(function () {
@@ -31,6 +33,23 @@ test('new users can register', function () {
         'color' => '#db2777',
         'timezone' => 'America/Chicago',
     ]);
+});
+
+test('registration sends the email verification notification', function () {
+    Notification::fake();
+
+    $this->post(route('register.store'), [
+        'name' => 'Test User',
+        'email' => 'test@example.com',
+        'color' => '#db2777',
+        'timezone' => 'America/Chicago',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+    ]);
+
+    $user = User::query()->where('email', 'test@example.com')->sole();
+
+    Notification::assertSentTo($user, VerifyEmail::class);
 });
 
 test('registration screen lists the colors already taken in the family', function () {
