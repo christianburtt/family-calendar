@@ -51,8 +51,75 @@ test('legacy timezone names reported by some browsers are accepted', function ()
 
     $response->assertSessionHasNoErrors();
 
-    expect($user->refresh()->timezone)->toBe('Asia/Calcutta');
+    // Stored as the modern zone, so any PHP build can construct it.
+    expect($user->refresh()->timezone)->toBe('Asia/Kolkata');
 });
+
+test('legacy timezone names are normalised to the modern zone', function (string $legacy, string $canonical) {
+    $user = User::factory()->create();
+
+    $this
+        ->actingAs($user)
+        ->patch(route('profile.update'), [
+            'name' => $user->name,
+            'email' => $user->email,
+            'color' => $user->color,
+            'timezone' => $legacy,
+        ])
+        ->assertSessionHasNoErrors();
+
+    expect($user->refresh()->timezone)->toBe($canonical);
+})->with([
+    ['Asia/Calcutta', 'Asia/Kolkata'],
+    ['Asia/Katmandu', 'Asia/Kathmandu'],
+    ['US/Eastern', 'America/New_York'],
+    ['Europe/Kiev', 'Europe/Kyiv'],
+    ['Asia/Saigon', 'Asia/Ho_Chi_Minh'],
+]);
+
+test('canonical timezone names are stored unchanged', function (string $timezone) {
+    $user = User::factory()->create();
+
+    $this
+        ->actingAs($user)
+        ->patch(route('profile.update'), [
+            'name' => $user->name,
+            'email' => $user->email,
+            'color' => $user->color,
+            'timezone' => $timezone,
+        ])
+        ->assertSessionHasNoErrors();
+
+    expect($user->refresh()->timezone)->toBe($timezone);
+})->with([
+    'America/New_York',
+    'Europe/Bucharest',
+    'UTC',
+]);
+
+test('offsets and bare abbreviations are still rejected as timezones', function (string $timezone) {
+    $user = User::factory()->create(['timezone' => 'UTC']);
+
+    $this
+        ->actingAs($user)
+        ->from(route('profile.edit'))
+        ->patch(route('profile.update'), [
+            'name' => $user->name,
+            'email' => $user->email,
+            'color' => $user->color,
+            'timezone' => $timezone,
+        ])
+        ->assertSessionHasErrors(['timezone' => 'The timezone field must be a valid timezone.']);
+
+    expect($user->refresh()->timezone)->toBe('UTC');
+})->with([
+    '+02:00',
+    '-05:00',
+    'Z',
+    'est',
+    'utc',
+    'Not/AZone',
+]);
 
 test('invalid profile colors and timezones are rejected', function (array $input, string $field, string $message) {
     $user = User::factory()->create(['color' => '#2563eb', 'timezone' => 'UTC']);

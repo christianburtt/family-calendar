@@ -35,6 +35,22 @@ test('new users can register', function () {
     ]);
 });
 
+test('registration normalises a legacy timezone name', function () {
+    $this->post(route('register.store'), [
+        'name' => 'Test User',
+        'email' => 'test@example.com',
+        'color' => '#db2777',
+        'timezone' => 'Asia/Calcutta',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+    ])->assertSessionHasNoErrors();
+
+    $this->assertDatabaseHas(User::class, [
+        'email' => 'test@example.com',
+        'timezone' => 'Asia/Kolkata',
+    ]);
+});
+
 test('registration sends the email verification notification', function () {
     Notification::fake();
 
