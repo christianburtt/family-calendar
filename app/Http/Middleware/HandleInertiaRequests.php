@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Calendar;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -42,6 +43,9 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'modules' => [
+                'medical' => $request->user()?->currentCalendar()?->hasModule(Calendar::MODULE_MEDICAL) ?? false,
+            ],
         ];
     }
 }

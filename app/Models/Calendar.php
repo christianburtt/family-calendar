@@ -21,14 +21,51 @@ use Illuminate\Support\Str;
  * @property string $name
  * @property string $slug
  * @property string $join_code
+ * @property array<string, bool>|null $modules
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'slug', 'join_code', 'owner_id'])]
+#[Fillable(['name', 'slug', 'join_code', 'owner_id', 'modules'])]
 class Calendar extends Model
 {
     /** @use HasFactory<CalendarFactory> */
     use HasFactory;
+
+    /**
+     * The medical records module.
+     */
+    public const string MODULE_MEDICAL = 'medical';
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'modules' => 'array',
+        ];
+    }
+
+    /**
+     * Whether the household has bought into a module.
+     */
+    public function hasModule(string $module): bool
+    {
+        return (bool) ($this->modules[$module] ?? false);
+    }
+
+    /**
+     * Switch a module on or off for the household.
+     */
+    public function setModule(string $module, bool $enabled): void
+    {
+        $modules = $this->modules ?? [];
+        $modules[$module] = $enabled;
+
+        $this->forceFill(['modules' => $modules])->save();
+    }
 
     /**
      * Get the person who created the calendar.

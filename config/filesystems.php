@@ -47,6 +47,19 @@ return [
             'report' => false,
         ],
 
+        /*
+         * Medical files. `serve` is off on purpose: a served disk registers a
+         * public GET /storage/{path} route, and nothing in this archive may be
+         * reachable without passing a policy check first.
+         */
+        'medical' => [
+            'driver' => 'local',
+            'root' => storage_path('app/medical'),
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

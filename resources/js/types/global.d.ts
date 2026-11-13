@@ -20,6 +20,8 @@ declare module '@inertiajs/core' {
             name: string;
             auth: Auth;
             sidebarOpen: boolean;
+            /** Modules the current household has switched on. */
+            modules: Record<string, boolean>;
             [key: string]: unknown;
         };
     }

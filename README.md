@@ -15,6 +15,22 @@ Built on the Laravel Vue starter kit with [Laravel 13](https://laravel.com), [In
 - **Stays fresh** — the calendar polls for changes every 60 seconds, so a fridge-mounted tablet stays up to date.
 - **Accounts with modern auth** — registration, email verification, password reset, two-factor authentication and passkeys via Laravel Fortify.
 
+### Medical records
+
+A separate section, switched on per calendar, holding scanned medical paperwork with its text searchable.
+
+- **One folder per person** — a folder is a person, not an account, so a child without a login gets one just the same.
+- **Scanned or photographed** — drop in the PDF a clinic emailed, or take a photo on a phone. HEIC from an iPhone is converted on arrival.
+- **Searchable text** — OCR reads every page and search folds Romanian diacritics, so `reteta` finds `Rețetă` and `judetean` finds `Județean`.
+- **Editable text** — when OCR gets a blurry page wrong, the text can be corrected by hand and search picks up the fix.
+- **Suggested details** — a cheap model reads the text and proposes a title, type, date and clinic; nothing is saved until somebody accepts it.
+- **Household-wide access** — every approved member of the calendar sees every folder. Deleting a document is limited to whoever uploaded it or the household's owner.
+- **Soft deletes** — removed documents stay in a bin for 30 days before the file goes too.
+- **Access log** — opening or downloading a document records who did it.
+
+See [`MEDICAL_MODULE.md`](MEDICAL_MODULE.md) for the design and the reasoning behind it.
+
+
 ## Tech stack
 
 | Layer    | Tools                                                                |
@@ -141,18 +157,61 @@ database/
   factories/ seeders/        Demo family and events
   migrations/                Users, events, passkeys, 2FA, queues/cache
 resources/js/
-  pages/                     Inertia pages (Welcome, Calendar, auth, settings)
+  pages/                     Inertia pages (Welcome, Calendar, auth, settings, medical)
   components/calendar/       MonthView, WeekView, DayAgenda, EventDialog
+  components/medical/        DocumentUploader
   components/ui/             Reka UI / shadcn-vue style components
   lib/                       Date helpers, colours, toast handling
 routes/
   web.php  settings.php      App and settings routes
+  medical.php                Medical records routes
 tests/
-  Feature/                   Auth, calendar, events and settings tests
+  Feature/                   Auth, calendar, events, settings and medical tests
 ```
+
+The medical module is namespaced under `app/Medical/` (models, controllers, jobs,
+OCR and metadata drivers, policies, search), so the calendar never imports it and
+the next module can be copied from the same shape.
+
+## Medical records setup
+
+The module works with no credentials: documents upload, file, preview, and accept
+typed-in text. Reading them needs an OCR key.
+
+```dotenv
+OPPER_API_KEY=your-key
+MEDICAL_OCR_DRIVER=opper          # "null" reads nothing; the app still works
+MEDICAL_OCR_MODEL=mistral/mistral-ocr-latest
+MEDICAL_METADATA_ENABLED=true
+MEDICAL_METADATA_MODEL=deepseek-v4.1-flash
+```
+
+Check the model strings against your gateway before uploading anything:
+
+```bash
+php artisan medical:check-ocr
+```
+
+Then switch the module on for a household from **Calendar → People → Medical records**.
+
+**Upload limits.** The default PHP ceiling is 20 MB, which a twelve-page clinic
+PDF exceeds. Raise `upload_max_filesize` and `post_max_size` to at least 64M in
+your php.ini and restart PHP. `MEDICAL_MAX_UPLOAD_MB` caps uploads in the
+application itself.
+
+**Storage.** Files live on the `medical` disk (`storage/app/medical`) by default.
+That disk is deliberately not served: every read goes through a controller that
+checks the policy first. To move the archive to object storage, set
+`MEDICAL_DISK=s3` and `composer require league/flysystem-aws-s3-v3`.
+
+**Backups are not automated.** `storage/app/medical` and the database both need
+to be backed up together; a restore of one without the other leaves documents
+with no files.
 
 ## Notes
 
 - Events have no recurrence support yet; each event is a single time range.
 - Hidden-member preferences live in the browser (`localStorage`), not the database.
 - `AGENTS.md` contains the project's conventions for AI-assisted development; `boost.json` configures Laravel Boost tooling.
+- PDF thumbnails are not generated: rasterising a PDF needs Ghostscript, so PDFs open in the browser's own viewer instead.
+- On a Linux host, HEIC conversion depends on Imagick's libheif build; the macOS `sips` fallback does not exist there.

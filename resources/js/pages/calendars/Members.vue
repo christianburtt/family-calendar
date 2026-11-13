@@ -24,6 +24,7 @@ type Props = {
         join_url: string;
         can_manage: boolean;
         is_owner: boolean;
+        medical_enabled: boolean;
     };
     members: CalendarMemberRecord[];
     pending: CalendarMemberRecord[];
@@ -102,6 +103,14 @@ function leaveCalendar(): void {
     }
 
     router.delete(leave(props.calendar.id).url);
+}
+
+function toggleMedical(): void {
+    router.patch(
+        `/calendars/${props.calendar.id}/modules`,
+        { enabled: !props.calendar.medical_enabled },
+        { preserveScroll: true },
+    );
 }
 
 const copied = ref<string | null>(null);
@@ -315,6 +324,26 @@ async function copy(value: string, key: string): Promise<void> {
             <Button variant="outline" @click="leaveCalendar">
                 <UserMinus />
                 Leave
+            </Button>
+        </section>
+
+        <section
+            v-if="calendar.can_manage"
+            class="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4"
+            data-test="medical-module-toggle"
+        >
+            <div class="space-y-1">
+                <h2 class="text-sm font-medium">Medical records</h2>
+                <p class="text-xs text-muted-foreground">
+                    A folder of scanned paperwork for each person, searchable by
+                    its text. Everyone on this calendar can open every folder.
+                </p>
+            </div>
+            <Button
+                variant="outline"
+                @click="toggleMedical"
+            >
+                {{ calendar.medical_enabled ? 'Turn off' : 'Turn on' }}
             </Button>
         </section>
 
