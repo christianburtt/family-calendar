@@ -6,7 +6,7 @@ This document is the agreed design. It is the spec the implementation follows, a
 
 ---
 
-## 1. Tenancy: the calendar *is* the household
+## 1. Tenancy: the calendar _is_ the household
 
 There is no `households` table. A household is a calendar; membership is `calendar_user` where `status = active`. The module gate is a JSON column on the calendar.
 
@@ -23,9 +23,9 @@ public function hasModule(string $module): bool
 }
 ```
 
-* Migration backfills `{"medical": true}` on every existing calendar.
-* New calendars start with `modules = null`; the owner enables medical from the People page.
-* Every medical table carries `calendar_id`, so scoping is a single `where` and never a join through a pivot.
+- Migration backfills `{"medical": true}` on every existing calendar.
+- New calendars start with `modules = null`; the owner enables medical from the People page.
+- Every medical table carries `calendar_id`, so scoping is a single `where` and never a join through a pivot.
 
 **Accepted consequence:** approving a join request grants medical access. There is no separate consent step; `medical_activity` makes it auditable after the fact.
 
@@ -78,11 +78,11 @@ final class OcrText
 }
 ```
 
-| Column | Contents |
-| --- | --- |
-| `dosars.search_text` | folded patient name |
+| Column                          | Contents                           |
+| ------------------------------- | ---------------------------------- |
+| `dosars.search_text`            | folded patient name                |
 | `medical_documents.search_text` | folded title, tags, category label |
-| `document_pages.search_text` | folded OCR markdown |
+| `document_pages.search_text`    | folded OCR markdown                |
 
 The query matches a document when any of the three match, so `reteta` finds `Rețetă`, `Maria` finds Maria's documents, and a lab value finds the page it is printed on. The snippet is cut from the folded text and clamped to the original page text, because folding is length-preserving for Romanian but not for `ß` or ligatures.
 
@@ -128,11 +128,11 @@ interface MetadataExtractor
 }
 ```
 
-| Driver | Env |
-| --- | --- |
-| `OpperOcrEngine` | `MEDICAL_OCR_MODEL=mistral/mistral-ocr-latest` |
-| `NullOcrEngine` | `MEDICAL_OCR_DRIVER=null` |
-| `OpperMetadataExtractor` | `MEDICAL_METADATA_MODEL=deepseek-v4.1-flash` |
+| Driver                   | Env                                            |
+| ------------------------ | ---------------------------------------------- |
+| `OpperOcrEngine`         | `MEDICAL_OCR_MODEL=mistral/mistral-ocr-latest` |
+| `NullOcrEngine`          | `MEDICAL_OCR_DRIVER=null`                      |
+| `OpperMetadataExtractor` | `MEDICAL_METADATA_MODEL=deepseek-v4.1-flash`   |
 
 Opper is the default because it is one EU-hosted key in front of both models, its `/v3/ocr` endpoint accepts base64 so a private file never needs a public URL, and its `/v3/compat` endpoint is OpenAI-compatible so the metadata model is the same key with a different model string.
 
@@ -153,14 +153,14 @@ A failed OCR never rejects the upload: the scan is the artefact that matters, an
 
 ## 7. Permissions
 
-| Action | Who |
-| --- | --- |
-| View anything | active calendar member, module enabled |
-| Create dosar / upload | any active member |
-| Edit metadata or OCR text | any active member |
-| Delete document | uploader **or** calendar owner |
-| Delete dosar | calendar owner |
-| Restore | same as delete |
+| Action                    | Who                                    |
+| ------------------------- | -------------------------------------- |
+| View anything             | active calendar member, module enabled |
+| Create dosar / upload     | any active member                      |
+| Edit metadata or OCR text | any active member                      |
+| Delete document           | uploader **or** calendar owner         |
+| Delete dosar              | calendar owner                         |
+| Restore                   | same as delete                         |
 
 Policies resolve through `calendar_id`; a document id from another calendar 404s before any query runs.
 
@@ -226,16 +226,16 @@ the 20M default. Laravel Cloud's base image is already generous.
 
 ## 10a. Laravel Cloud
 
-* **Object storage**: attach a **private** bucket and make it the default disk,
+- **Object storage**: attach a **private** bucket and make it the default disk,
   with the EU jurisdiction. `league/flysystem-aws-s3-v3` is required and is now in
   `composer.json`.
-* **Queue**: add a **managed queue** named `default`. Cloud sets
+- **Queue**: add a **managed queue** named `default`. Cloud sets
   `QUEUE_CONNECTION=cloud`; every job dispatched without an explicit connection
   goes there, which is only `ProcessMedicalDocument`. Flex is enough.
-* **Secrets**: `OPPER_API_KEY` belongs in Secrets, not a plain variable.
-* **`APP_KEY`**: must match whatever encrypted an existing `dosars.cnp` value, or
+- **Secrets**: `OPPER_API_KEY` belongs in Secrets, not a plain variable.
+- **`APP_KEY`**: must match whatever encrypted an existing `dosars.cnp` value, or
   that column cannot be decrypted.
-* **Not needed**: `storage:link`, `queue:restart`, `horizon:terminate`,
+- **Not needed**: `storage:link`, `queue:restart`, `horizon:terminate`,
   `optimize:clear`.
 
 ## 10b. Image conversion across hosts
@@ -247,7 +247,6 @@ extension but does ship `magick` with libheif; a bare container may have none, i
 which case a HEIC is refused with a clear message rather than stored unreadable.
 A thumbnail that cannot be generated is simply omitted: it is never a reason to
 lose a scan.
-
 
 ## 11. Where it lives
 
@@ -285,25 +284,25 @@ tests/Support/FakeOcrEngine.php
 
 These changed from the first draft, or were settled while writing the code:
 
-* **`dosars` became `medical_dosars`.** Every table is prefixed `medical_` so the
+- **`dosars` became `medical_dosars`.** Every table is prefixed `medical_` so the
   next module never collides with a generic word.
-* **Folder deletion is owner-only.** An earlier draft let any member delete,
+- **Folder deletion is owner-only.** An earlier draft let any member delete,
   which would take every document in the folder with it.
-* **Thumbnails are image-only.** Rasterising a PDF needs Ghostscript, which is
+- **Thumbnails are image-only.** Rasterising a PDF needs Ghostscript, which is
   not installed; PDFs open in the browser's viewer instead.
-* **`ImageNormaliser` only converts convertible types.** PDF and JPEG pass
+- **`ImageNormaliser` only converts convertible types.** PDF and JPEG pass
   through untouched rather than being forced through Imagick.
-* **The upload request stores before it queues.** Storing is cheap and makes the
+- **The upload request stores before it queues.** Storing is cheap and makes the
   document real; reading is the part that can fail and be retried.
-* **`UploadedFile::fake()->create()` produces zero-byte files** in this Laravel
+- **`UploadedFile::fake()->create()` produces zero-byte files** in this Laravel
   version, so tests upload real bodies through the `fakePdf` and `fakeJpeg`
   helpers in `tests/Pest.php`.
-*. **The `medical` disk sets `serve => false`.** The existing `local` disk has
+  *. **The `medical` disk sets `serve => false`.** The existing `local` disk has
   `serve => true`, which registers a public `GET /storage/{path}` route.
-* **Documents store a null disk**, meaning the environment's default. Laravel
+- **Documents store a null disk**, meaning the environment's default. Laravel
   Cloud attaches a private bucket as the default and injects `FILESYSTEM_DISK`,
   so a hardcoded disk name would break on deployment.
-* **`league/flysystem-aws-s3-v3` was missing** and is now required. Without it,
+- **`league/flysystem-aws-s3-v3` was missing** and is now required. Without it,
   `Storage::disk()` against any S3 disk throws at runtime rather than at build.
 
 ## 13. Out of scope in v1

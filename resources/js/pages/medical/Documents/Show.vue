@@ -69,7 +69,9 @@ defineOptions({
     },
 });
 
-const fullText = computed(() => props.pages.map((page) => page.markdown).join('\n\n'));
+const fullText = computed(() =>
+    props.pages.map((page) => page.markdown).join('\n\n'),
+);
 
 const editing = ref(false);
 
@@ -122,7 +124,11 @@ function acceptSuggestions(): void {
 }
 
 function retry(): void {
-    router.post(retryDocument(props.document.id).url, {}, { preserveScroll: true });
+    router.post(
+        retryDocument(props.document.id).url,
+        {},
+        { preserveScroll: true },
+    );
 }
 
 function destroy(): void {
@@ -157,7 +163,9 @@ function formatDate(iso: string | null): string {
                     <h1 class="truncate text-lg font-semibold tracking-tight">
                         {{ document.title }}
                     </h1>
-                    <p class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <p
+                        class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground"
+                    >
                         <span class="flex items-center gap-1">
                             <span
                                 class="size-2 rounded-full"
@@ -175,7 +183,11 @@ function formatDate(iso: string | null): string {
 
             <div class="flex items-center gap-2">
                 <Button variant="outline" size="sm" as-child>
-                    <a :href="fileDocument(document.id).url" target="_blank" rel="noopener">
+                    <a
+                        :href="fileDocument(document.id).url"
+                        target="_blank"
+                        rel="noopener"
+                    >
                         <ExternalLink />
                         Open
                     </a>

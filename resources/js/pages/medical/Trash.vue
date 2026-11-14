@@ -48,8 +48,8 @@ function formatDate(iso: string | null): string {
             <div class="space-y-1">
                 <h1 class="text-xl font-semibold tracking-tight">Bin</h1>
                 <p class="text-sm text-muted-foreground">
-                    Deleted documents stay here for {{ props.restore_days }} days.
-                    After that the file goes too.
+                    Deleted documents stay here for
+                    {{ props.restore_days }} days. After that the file goes too.
                 </p>
             </div>
         </div>

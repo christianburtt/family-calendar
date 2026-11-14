@@ -30,7 +30,6 @@ A separate section, switched on per calendar, holding scanned medical paperwork 
 
 See [`MEDICAL_MODULE.md`](MEDICAL_MODULE.md) for the design and the reasoning behind it.
 
-
 ## Tech stack
 
 | Layer    | Tools                                                                |
@@ -267,7 +266,6 @@ ImageMagick **command-line** tools (`magick`) plus libheif, which the normaliser
 uses as its second choice after the extension. If you would rather use the
 extension, add the **ImageMagick** build add-on (Private Cloud only). Either way a
 10-bit iPhone photo converts.
-
 
 ## Notes
 

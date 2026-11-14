@@ -339,10 +339,7 @@ async function copy(value: string, key: string): Promise<void> {
                     its text. Everyone on this calendar can open every folder.
                 </p>
             </div>
-            <Button
-                variant="outline"
-                @click="toggleMedical"
-            >
+            <Button variant="outline" @click="toggleMedical">
                 {{ calendar.medical_enabled ? 'Turn off' : 'Turn on' }}
             </Button>
         </section>

@@ -116,7 +116,9 @@ function statusLabel(status: string): string {
                             {{ document.title }}
                         </Link>
 
-                        <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <div
+                            class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground"
+                        >
                             <Badge variant="secondary">{{
                                 document.category_label
                             }}</Badge>
@@ -134,7 +136,11 @@ function statusLabel(status: string): string {
 
                         <div class="flex flex-wrap items-center gap-2">
                             <Badge
-                                v-if="['pending', 'processing'].includes(document.status)"
+                                v-if="
+                                    ['pending', 'processing'].includes(
+                                        document.status,
+                                    )
+                                "
                                 variant="secondary"
                             >
                                 <RotateCcw class="animate-spin" />
@@ -147,7 +153,10 @@ function statusLabel(status: string): string {
                                 <AlertTriangle />
                                 Could not read — open to retry
                             </Badge>
-                            <Badge v-if="document.is_duplicate" variant="outline">
+                            <Badge
+                                v-if="document.is_duplicate"
+                                variant="outline"
+                            >
                                 Possible duplicate
                             </Badge>
                         </div>

@@ -5,7 +5,10 @@ import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { store as storeDocuments } from '@/routes/medical/documents';
-import type { MedicalCategoryOption, MedicalUploadLimits } from '@/types/medical';
+import type {
+    MedicalCategoryOption,
+    MedicalUploadLimits,
+} from '@/types/medical';
 
 type Props = {
     dosarId: number;
@@ -30,7 +33,11 @@ const form = useForm<{
 });
 
 const totalMb = computed(() =>
-    (files.value.reduce((total, file) => total + file.size, 0) / 1024 / 1024).toFixed(1),
+    (
+        files.value.reduce((total, file) => total + file.size, 0) /
+        1024 /
+        1024
+    ).toFixed(1),
 );
 
 function addFiles(incoming: FileList | null): void {
@@ -144,7 +151,9 @@ function formatSize(bytes: number): string {
                 </Button>
             </li>
 
-            <li class="text-xs text-muted-foreground">{{ totalMb }} MB total</li>
+            <li class="text-xs text-muted-foreground">
+                {{ totalMb }} MB total
+            </li>
         </ul>
 
         <div class="grid gap-3 sm:grid-cols-2">
@@ -167,7 +176,9 @@ function formatSize(bytes: number): string {
             <label class="space-y-1.5 text-sm">
                 <span class="font-medium"
                     >Date on the document
-                    <span class="text-xs text-muted-foreground">(optional)</span></span
+                    <span class="text-xs text-muted-foreground"
+                        >(optional)</span
+                    ></span
                 >
                 <Input v-model="form.document_date" type="date" />
             </label>

@@ -142,7 +142,12 @@ function submit(): void {
                 </div>
 
                 <div class="space-y-2">
-                    <Label for="cnp">CNP <span class="text-xs text-muted-foreground">(optional)</span></Label>
+                    <Label for="cnp"
+                        >CNP
+                        <span class="text-xs text-muted-foreground"
+                            >(optional)</span
+                        ></Label
+                    >
                     <Input
                         id="cnp"
                         v-model="form.cnp"

@@ -13,7 +13,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import medicalRoutes from '@/routes/medical';
-import { create as createDosar, show as showDosar } from '@/routes/medical/dosars';
+import {
+    create as createDosar,
+    show as showDosar,
+} from '@/routes/medical/dosars';
 import { show as showDocument } from '@/routes/medical/documents';
 import type { MedicalDosarSummary, MedicalSearchResult } from '@/types/medical';
 
