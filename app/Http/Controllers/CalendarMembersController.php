@@ -29,6 +29,7 @@ class CalendarMembersController extends Controller
                 'join_url' => route('join.show', $calendar->join_code),
                 'can_manage' => $calendar->isManagedBy($user),
                 'is_owner' => $calendar->owner_id === $user->id,
+                'medical_enabled' => $calendar->hasModule(Calendar::MODULE_MEDICAL),
             ],
             'members' => $this->memberships($calendar, CalendarUser::STATUS_ACTIVE),
             'pending' => $this->memberships($calendar, CalendarUser::STATUS_PENDING),
