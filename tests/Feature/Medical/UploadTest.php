@@ -36,7 +36,7 @@ function fakeOcr(): FakeOcrEngine
 
 test('uploading a scan files it and queues it to be read', function () {
     Queue::fake();
-    Storage::fake('medical');
+    Storage::fake('local');
 
     [$calendar, $owner] = medicalHousehold();
     $dosar = dosarIn($calendar, 'Maria');
@@ -59,7 +59,7 @@ test('uploading a scan files it and queues it to be read', function () {
         ->and($document->sha256)->toHaveLength(64)
         ->and($document->path)->toContain('medical/'.$calendar->id.'/');
 
-    Storage::disk('medical')->assertExists($document->path);
+    Storage::disk('local')->assertExists($document->path);
 
     Queue::assertPushed(ProcessMedicalDocument::class);
 });
@@ -133,7 +133,7 @@ test('a failed document can be retried', function () {
 
 test('the same bytes uploaded twice into one folder are flagged', function () {
     Queue::fake();
-    Storage::fake('medical');
+    Storage::fake('local');
 
     [$calendar, $owner] = medicalHousehold();
     $dosar = dosarIn($calendar, 'Maria');

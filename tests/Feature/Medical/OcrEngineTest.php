@@ -10,11 +10,11 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 test('the opper engine sends the file as base64 and never as a public url', function () {
-    Storage::fake('medical');
-    Storage::disk('medical')->put('medical/1/scan.pdf', 'PDF-BYTES');
+    Storage::fake('local');
+    Storage::disk('local')->put('medical/1/scan.pdf', 'PDF-BYTES');
 
     $document = new MedicalDocument([
-        'disk' => 'medical',
+        'disk' => null,
         'path' => 'medical/1/scan.pdf',
         'original_name' => 'reteta.pdf',
     ]);
@@ -55,8 +55,8 @@ test('the opper engine sends the file as base64 and never as a public url', func
 });
 
 test('page numbers are one-based even when the engine reports zero-based indices', function () {
-    Storage::fake('medical');
-    Storage::disk('medical')->put('scan.pdf', 'bytes');
+    Storage::fake('local');
+    Storage::disk('local')->put('scan.pdf', 'bytes');
 
     Http::fake([
         'api.opper.ai/v3/ocr' => Http::response([
@@ -67,7 +67,7 @@ test('page numbers are one-based even when the engine reports zero-based indices
         ]),
     ]);
 
-    $document = new MedicalDocument(['disk' => 'medical', 'path' => 'scan.pdf', 'original_name' => 'x.pdf']);
+    $document = new MedicalDocument(['disk' => null, 'path' => 'scan.pdf', 'original_name' => 'x.pdf']);
 
     $engine = new OpperOcrEngine([
         'base_url' => 'https://api.opper.ai',
@@ -80,14 +80,14 @@ test('page numbers are one-based even when the engine reports zero-based indices
 });
 
 test('a refused request becomes a readable failure', function () {
-    Storage::fake('medical');
-    Storage::disk('medical')->put('scan.pdf', 'bytes');
+    Storage::fake('local');
+    Storage::disk('local')->put('scan.pdf', 'bytes');
 
     Http::fake([
         'api.opper.ai/v3/ocr' => Http::response(['error' => ['code' => 'bad', 'message' => 'File too large']], 413),
     ]);
 
-    $document = new MedicalDocument(['disk' => 'medical', 'path' => 'scan.pdf', 'original_name' => 'x.pdf']);
+    $document = new MedicalDocument(['disk' => null, 'path' => 'scan.pdf', 'original_name' => 'x.pdf']);
 
     $engine = new OpperOcrEngine([
         'base_url' => 'https://api.opper.ai',
@@ -101,11 +101,11 @@ test('a refused request becomes a readable failure', function () {
 });
 
 test('a missing file is reported rather than sent', function () {
-    Storage::fake('medical');
+    Storage::fake('local');
 
     Http::fake();
 
-    $document = new MedicalDocument(['disk' => 'medical', 'path' => 'gone.pdf', 'original_name' => 'x.pdf']);
+    $document = new MedicalDocument(['disk' => null, 'path' => 'gone.pdf', 'original_name' => 'x.pdf']);
 
     $engine = new OpperOcrEngine([
         'base_url' => 'https://api.opper.ai',
@@ -120,7 +120,7 @@ test('a missing file is reported rather than sent', function () {
 });
 
 test('the null engine returns one empty page so text can be typed in', function () {
-    $document = new MedicalDocument(['disk' => 'medical', 'path' => 'x.pdf', 'original_name' => 'x.pdf']);
+    $document = new MedicalDocument(['disk' => null, 'path' => 'x.pdf', 'original_name' => 'x.pdf']);
 
     $result = (new NullOcrEngine)->extract($document);
 

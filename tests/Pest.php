@@ -31,18 +31,20 @@ pest()->extend(TestCase::class)
 |--------------------------------------------------------------------------
 |
 | Config that every test needs is set once. Individual tests swap in their own
-| OCR engine; the whole suite runs on the fake disk and never calls out.
+| OCR engine; the whole suite runs on a fake default disk and never calls out.
 |
 */
 
 pest()->beforeEach(function () {
     config([
-        'medical.disk' => 'medical',
+        // Null means the environment's default disk, which is how a private
+        // Cloud bucket is attached. Tests fake that same default disk.
+        'medical.disk' => null,
         'medical.ocr.driver' => 'null',
         'medical.metadata.enabled' => false,
     ]);
 
-    Storage::fake('medical');
+    Storage::fake('local');
 })->in('Feature');
 
 /*

@@ -7,13 +7,14 @@ return [
     | Storage
     |--------------------------------------------------------------------------
     |
-    | Where medical files are kept. The disk is named rather than reached for
-    | directly so the archive can move to object storage by changing an
-    | environment variable and installing a Flysystem adapter.
+    | Where medical files are kept. Null means the environment's default disk,
+    | which is what Laravel Cloud wants: attach a private bucket as the default
+    | and Cloud injects the credentials, so nothing here names a disk that only
+    | exists on one host. A self-hosted install can name one instead.
     |
     */
 
-    'disk' => env('MEDICAL_DISK', 'medical'),
+    'disk' => env('MEDICAL_DISK') ?: null,
 
     /*
     |--------------------------------------------------------------------------

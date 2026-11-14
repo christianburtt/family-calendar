@@ -32,7 +32,7 @@ class MedicalDocumentFactory extends Factory
             'category' => fake()->randomElement(DocumentCategory::cases()),
             'document_date' => fake()->dateTimeBetween('-2 years')->format('Y-m-d'),
             'original_name' => $name,
-            'disk' => 'medical',
+            'disk' => null,
             'path' => 'medical/'.Str::uuid().'/'.$name,
             'mime_type' => 'application/pdf',
             'size' => fake()->numberBetween(40_000, 900_000),

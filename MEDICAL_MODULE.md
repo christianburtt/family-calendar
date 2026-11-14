@@ -206,7 +206,7 @@ Steps 1–4 need no credentials.
 
 ```dotenv
 OPPER_API_KEY=
-MEDICAL_DISK=medical
+MEDICAL_DISK=            # empty means the environment's default disk
 MEDICAL_MAX_UPLOAD_MB=25
 MEDICAL_OCR_DRIVER=opper
 MEDICAL_OCR_BASE_URL=https://api.opper.ai
@@ -215,7 +215,39 @@ MEDICAL_METADATA_ENABLED=true
 MEDICAL_METADATA_MODEL=deepseek-v4.1-flash
 ```
 
-Host changes required before step 5: both `upload_max_filesize` and `post_max_size` in the PHP ini must be at least 64M. A 12-page clinic PDF exceeds the 20M default.
+`MEDICAL_DISK` is empty by default, which means "the environment's default disk".
+Laravel Cloud attaches a private bucket as the default and injects its
+credentials, so nothing in a row or a config file names a disk that exists on
+only one host. `medical_documents.disk` is nullable for the same reason.
+
+Host changes required locally before step 5: both `upload_max_filesize` and
+`post_max_size` in the PHP ini must be at least 64M. A 12-page clinic PDF exceeds
+the 20M default. Laravel Cloud's base image is already generous.
+
+## 10a. Laravel Cloud
+
+* **Object storage**: attach a **private** bucket and make it the default disk,
+  with the EU jurisdiction. `league/flysystem-aws-s3-v3` is required and is now in
+  `composer.json`.
+* **Queue**: add a **managed queue** named `default`. Cloud sets
+  `QUEUE_CONNECTION=cloud`; every job dispatched without an explicit connection
+  goes there, which is only `ProcessMedicalDocument`. Flex is enough.
+* **Secrets**: `OPPER_API_KEY` belongs in Secrets, not a plain variable.
+* **`APP_KEY`**: must match whatever encrypted an existing `dosars.cnp` value, or
+  that column cannot be decrypted.
+* **Not needed**: `storage:link`, `queue:restart`, `horizon:terminate`,
+  `optimize:clear`.
+
+## 10b. Image conversion across hosts
+
+There is no single image tool present everywhere, so the normaliser tries, in
+order: the `imagick` extension, the `magick` command, the `convert` command, then
+macOS `sips`. A local Mac hits the extension; a Laravel Cloud PHP image has no
+extension but does ship `magick` with libheif; a bare container may have none, in
+which case a HEIC is refused with a clear message rather than stored unreadable.
+A thumbnail that cannot be generated is simply omitted: it is never a reason to
+lose a scan.
+
 
 ## 11. Where it lives
 
@@ -266,8 +298,13 @@ These changed from the first draft, or were settled while writing the code:
 * **`UploadedFile::fake()->create()` produces zero-byte files** in this Laravel
   version, so tests upload real bodies through the `fakePdf` and `fakeJpeg`
   helpers in `tests/Pest.php`.
-* **The `medical` disk sets `serve => false`.** The existing `local` disk has
+*. **The `medical` disk sets `serve => false`.** The existing `local` disk has
   `serve => true`, which registers a public `GET /storage/{path}` route.
+* **Documents store a null disk**, meaning the environment's default. Laravel
+  Cloud attaches a private bucket as the default and injects `FILESYSTEM_DISK`,
+  so a hardcoded disk name would break on deployment.
+* **`league/flysystem-aws-s3-v3` was missing** and is now required. Without it,
+  `Storage::disk()` against any S3 disk throws at runtime rather than at build.
 
 ## 13. Out of scope in v1
 

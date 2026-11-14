@@ -33,7 +33,7 @@ final class DocumentStorage
     {
         $normalised = $this->normaliser->normalise($file);
         $thumbnail = $this->normaliser->thumbnail($file);
-        $disk = Storage::disk($document->disk);
+        $disk = $document->storage();
         $directory = 'medical/'.$document->calendar_id.'/'.Str::uuid();
 
         $extension = $normalised?->extension()
@@ -45,7 +45,7 @@ final class DocumentStorage
             $bytes = $normalised->bytes;
             $mimeType = $normalised->mimeType;
         } else {
-            $path = $file->storeAs($directory, 'original.'.$extension, $document->disk);
+            $path = $disk->putFileAs($directory, $file, 'original.'.$extension);
 
             if ($path === false) {
                 throw new \RuntimeException(__('The file could not be stored.'));
@@ -79,7 +79,7 @@ final class DocumentStorage
      */
     public function delete(MedicalDocument $document): void
     {
-        $disk = Storage::disk($document->disk);
+        $disk = $document->storage();
 
         if ($disk->exists($document->path)) {
             $disk->delete($document->path);

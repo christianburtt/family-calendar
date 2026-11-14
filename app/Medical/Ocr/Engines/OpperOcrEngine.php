@@ -8,7 +8,6 @@ use App\Medical\Ocr\OcrException;
 use App\Medical\Ocr\OcrPage;
 use App\Medical\Ocr\OcrResult;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * Reads documents through an Opper gateway.
@@ -31,27 +30,29 @@ class OpperOcrEngine implements OcrEngine
      */
     public function extract(MedicalDocument $document): OcrResult
     {
-        $disk = Storage::disk($document->disk);
+        $disk = $document->storage();
 
         if (! $disk->exists($document->path)) {
             throw OcrException::requestFailed(__('the stored file is missing'));
         }
 
+        $request = [
+            'model' => $this->config['model'],
+            'document' => [
+                'type' => 'base64',
+                'content' => base64_encode((string) $disk->get($document->path)),
+                'document_name' => $document->original_name,
+            ],
+            'parameters' => [
+                'include_blocks' => true,
+                'confidence_scores_granularity' => 'page',
+            ],
+        ];
+
         $response = Http::withToken((string) $this->config['api_key'])
             ->timeout($this->config['timeout'])
             ->acceptJson()
-            ->post(rtrim($this->config['base_url'], '/').'/v3/ocr', [
-                'model' => $this->config['model'],
-                'document' => [
-                    'type' => 'base64',
-                    'content' => base64_encode((string) $disk->get($document->path)),
-                    'document_name' => $document->original_name,
-                ],
-                'parameters' => [
-                    'include_blocks' => true,
-                    'confidence_scores_granularity' => 'page',
-                ],
-            ]);
+            ->post(rtrim($this->config['base_url'], '/').'/v3/ocr', $request);
 
         if ($response->failed()) {
             throw OcrException::requestFailed(

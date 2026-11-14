@@ -48,8 +48,14 @@ return [
         ],
 
         /*
-         * Medical files. `serve` is off on purpose: a served disk registers a
-         * public GET /storage/{path} route, and nothing in this archive may be
+         * An optional self-hosted home for medical files.
+         *
+         * The module uses the environment's default disk, which is what Laravel
+         * Cloud needs: attach a private bucket as the default and Cloud injects
+         * the credentials. Set MEDICAL_DISK=medical to pin it here instead.
+         *
+         * `serve` is off on purpose: a served disk registers a public
+         * GET /storage/{path} route, and nothing in this archive may be
          * reachable without passing a policy check first.
          */
         'medical' => [

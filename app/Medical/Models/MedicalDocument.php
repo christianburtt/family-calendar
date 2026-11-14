@@ -172,6 +172,11 @@ class MedicalDocument extends Model
 
     /**
      * The storage disk the original lives on.
+     *
+     * A null disk means the environment's default, which is how Laravel Cloud
+     * attaches a private bucket: Cloud injects the credentials and sets
+     * FILESYSTEM_DISK, so naming a disk in the row would break as soon as the
+     * same archive moved between hosts.
      */
     public function storage(): FilesystemAdapter
     {

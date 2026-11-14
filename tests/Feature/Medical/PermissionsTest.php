@@ -68,12 +68,12 @@ test('deleting a document keeps the file until the bin is emptied', function () 
     $dosar = dosarIn($calendar);
     $document = MedicalDocument::factory()->inDosar($dosar)->create(['uploaded_by_id' => $owner->id]);
 
-    Storage::disk('medical')->put($document->path, 'bytes');
+    Storage::disk('local')->put($document->path, 'bytes');
 
     $this->actingAs($owner)->delete(route('medical.documents.destroy', $document));
 
     expect(MedicalDocument::withTrashed()->find($document->id)->trashed())->toBeTrue()
-        ->and(Storage::disk('medical')->exists($document->path))->toBeTrue();
+        ->and(Storage::disk('local')->exists($document->path))->toBeTrue();
 });
 
 test('a restored document comes back into its folder', function () {
@@ -127,7 +127,7 @@ test('downloading is recorded separately from opening', function () {
     $dosar = dosarIn($calendar);
     $document = MedicalDocument::factory()->inDosar($dosar)->create();
 
-    Storage::disk('medical')->put($document->path, 'bytes');
+    Storage::disk('local')->put($document->path, 'bytes');
 
     $this->actingAs($owner)->get(route('medical.documents.download', $document));
 

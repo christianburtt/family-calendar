@@ -18,7 +18,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -53,7 +52,7 @@ class MedicalDocumentController extends MedicalController
                 'category' => $category ?: 'other',
                 'document_date' => $request->input('document_date'),
                 'original_name' => $file->getClientOriginalName(),
-                'disk' => (string) config('medical.disk'),
+                'disk' => config('medical.disk'),
                 'path' => '',
                 'mime_type' => (string) $file->getMimeType(),
                 'size' => (int) $file->getSize(),
@@ -150,7 +149,7 @@ class MedicalDocumentController extends MedicalController
 
         $activity->record($request, $document, Activity::ACTION_PREVIEW);
 
-        return Storage::disk($document->disk)->response(
+        return $document->storage()->response(
             $document->path,
             $document->original_name,
             ['Cache-Control' => 'private, no-store'],
@@ -166,7 +165,7 @@ class MedicalDocumentController extends MedicalController
 
         $activity->record($request, $document, Activity::ACTION_DOWNLOAD);
 
-        return Storage::disk($document->disk)->download($document->path, $document->original_name);
+        return $document->storage()->download($document->path, $document->original_name);
     }
 
     /**
@@ -178,7 +177,7 @@ class MedicalDocumentController extends MedicalController
 
         abort_if($document->thumbnail_path === null, 404);
 
-        return Storage::disk($document->disk)->response(
+        return $document->storage()->response(
             $document->thumbnail_path,
             null,
             ['Cache-Control' => 'private, max-age=3600'],

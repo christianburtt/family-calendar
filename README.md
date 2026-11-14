@@ -199,14 +199,75 @@ PDF exceeds. Raise `upload_max_filesize` and `post_max_size` to at least 64M in
 your php.ini and restart PHP. `MEDICAL_MAX_UPLOAD_MB` caps uploads in the
 application itself.
 
-**Storage.** Files live on the `medical` disk (`storage/app/medical`) by default.
-That disk is deliberately not served: every read goes through a controller that
-checks the policy first. To move the archive to object storage, set
-`MEDICAL_DISK=s3` and `composer require league/flysystem-aws-s3-v3`.
+**Storage.** Files live on the environment's default disk. Locally that is
+`storage/app/medical` via the `medical` disk; on Laravel Cloud it is the private
+bucket you attach, because Cloud injects `FILESYSTEM_DISK` and the credentials.
+A document stores a null disk to mean "wherever the default is", so the same rows
+work on both. To keep a self-hosted install on a named disk instead, set
+`MEDICAL_DISK=medical`.
 
-**Backups are not automated.** `storage/app/medical` and the database both need
-to be backed up together; a restore of one without the other leaves documents
-with no files.
+**Backups are not automated.** The bucket and the database both need backing up
+together; a restore of one without the other leaves documents with no files.
+
+## Deploying to Laravel Cloud
+
+Three things need doing in the Cloud dashboard, and one in the repo.
+
+**In the repo** (already done): `league/flysystem-aws-s3-v3` is required. Without
+it, `Storage::disk()` throws `Class "League\Flysystem\AwsS3V3\PortableVisibilityConverter" not found`.
+
+**1. Attach a private bucket as the default disk.** Add an Object Storage bucket,
+set visibility to **private**, and tick it as the environment's default disk. Do
+not create a bucket with a disk name matching `medical`: the app reads the default
+disk, which is what lets the same code run locally and in production. Choose the
+**European Union** jurisdiction so the scans stay in the EU.
+
+**2. Add a managed queue.** Add compute → Managed queue, name it `default`, and
+deploy. Cloud then sets `QUEUE_CONNECTION=cloud` and the OCR job is picked up
+without any further configuration. Flex is enough: it scales to zero and wakes
+when a scan is uploaded.
+
+> A managed queue routes **every** job dispatched without an explicit connection.
+> This app only dispatches `ProcessMedicalDocument`, so there is nothing else to
+> reconcile. If a second queue driver is ever needed, dispatch that job with
+> `->onConnection('database')` instead of changing `QUEUE_CONNECTION`.
+
+**3. Set the environment variables.** Cloud injects the bucket and queue
+credentials; the medical ones are yours:
+
+```ini
+APP_KEY=                     # paste from local: php artisan key:generate --show
+OPPER_API_KEY=               # in Secrets, not as a plain variable
+MEDICAL_OCR_DRIVER=opper
+MEDICAL_OCR_MODEL=mistral/mistral-ocr-latest
+MEDICAL_METADATA_ENABLED=true
+MEDICAL_METADATA_MODEL=deepseek-v4.1-flash
+MEDICAL_MAX_UPLOAD_MB=25
+```
+
+`OPPER_API_KEY` belongs in **Secrets**, so it is encrypted and can be attached to
+staging and preview environments too without copying it around.
+
+**Beware `APP_KEY`.** If it differs from the one that encrypted a `dosars.cnp`
+value, the encrypted cast cannot decrypt it and reading a folder throws. Copy the
+key from your local `.env` if you are migrating existing data, or accept that the
+CNP column is empty on a fresh production database.
+
+**Not needed:** `php artisan storage:link` (the bucket is not served from disk),
+`queue:restart` and `horizon:terminate` (Cloud restarts workers), and
+`optimize:clear`. Keep `php artisan migrate --force` as the deploy command and
+`php artisan optimize` in the build command.
+
+**Uploads.** Cloud's base image sets a generous PHP `upload_max_filesize`, so the
+20 MB ceiling you hit on Herd does not apply. `MEDICAL_MAX_UPLOAD_MB` is the app's
+own cap and is enforced in validation.
+
+**HEIC.** Cloud's PHP image has no `imagick` extension by default, but it ships the
+ImageMagick **command-line** tools (`magick`) plus libheif, which the normaliser
+uses as its second choice after the extension. If you would rather use the
+extension, add the **ImageMagick** build add-on (Private Cloud only). Either way a
+10-bit iPhone photo converts.
+
 
 ## Notes
 
