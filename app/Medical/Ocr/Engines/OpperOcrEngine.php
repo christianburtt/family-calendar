@@ -55,6 +55,7 @@ class OpperOcrEngine implements OcrEngine
             ->post(rtrim($this->config['base_url'], '/').'/v3/ocr', $request);
 
         if ($response->failed()) {
+            logger()->error('Opper OCR request failed: '.$response->status().' '.$response->body());
             throw OcrException::requestFailed(
                 trim($response->json('error.message') ?? 'HTTP '.$response->status())
             );
