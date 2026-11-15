@@ -52,7 +52,7 @@ class OpperOcrEngine implements OcrEngine
         $response = Http::withToken((string) $this->config['api_key'])
             ->timeout($this->config['timeout'])
             ->acceptJson()
-            ->post(rtrim($this->config['base_url'], '/').'/v3/ocr', $request);
+            ->post(rtrim($this->config['base_url'], '/').'/ocr', $request);
 
         if ($response->failed()) {
             logger()->error('Opper OCR request failed: '.$response->status().' '.$response->body());
