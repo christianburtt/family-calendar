@@ -35,7 +35,7 @@ class OpperMetadataExtractor implements MetadataExtractor
         $response = Http::withToken((string) $this->config['api_key'])
             ->timeout($this->config['timeout'])
             ->acceptJson()
-            ->post(rtrim($this->config['base_url'], '/').'/v3/compat/chat/completions', [
+            ->post(rtrim($this->config['base_url'], '/').'/compat/chat/completions', [
                 'model' => $this->config['model'],
                 'messages' => [
                     [
